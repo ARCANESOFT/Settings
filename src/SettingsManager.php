@@ -80,11 +80,7 @@ class SettingsManager implements Contracts\Settings
     {
         $this->checkLoaded();
 
-        $domain = $this->getDefaultDomain();
-
-        if (str_contains($key, '::')) {
-            list($domain, $key) = explode('::', $key);
-        }
+        $domain = $this->grabDomain($key);
 
         return array_get($this->data->get($domain, []), $key, $default);
     }
@@ -93,11 +89,7 @@ class SettingsManager implements Contracts\Settings
     {
         $this->checkLoaded();
 
-        $domain = $this->getDefaultDomain();
-
-        if (str_contains($key, '::')) {
-            list($domain, $key) = explode('::', $key);
-        }
+        $domain = $this->grabDomain($key);
 
         $data = [];
 
@@ -114,7 +106,13 @@ class SettingsManager implements Contracts\Settings
     {
         $this->checkLoaded();
 
-        // TODO: Implement has() method.
+        $domain = $this->grabDomain($key);
+
+        if ( ! $this->data->has($domain)) {
+            return false;
+        }
+
+        return array_has($this->data->get($domain), $key);
     }
 
     public function all($domain = null)
@@ -130,7 +128,24 @@ class SettingsManager implements Contracts\Settings
 
     public function delete($key)
     {
-        // TODO: Implement delete() method.
+        $this->checkLoaded();
+
+        $domain = $this->getDefaultDomain();
+
+        if (str_contains($key, '::')) {
+            list($domain, $key) = explode('::', $key);
+        }
+
+        $data = $this->data->get($domain, []);
+        array_forget($data, $key);
+        $data = array_filter($data);
+
+        if (empty($data)) {
+            $this->data->forget($domain);
+        }
+        else {
+            $this->data->put($domain, $data);
+        }
     }
 
     public function reset()
@@ -140,31 +155,115 @@ class SettingsManager implements Contracts\Settings
 
     public function save()
     {
-        $saved = $this->model->all();
-        $data  = $this->data->map(function ($settings) {
-            return array_dot($settings);
-        });
+        $saved                              = $this->model->all();
+        $data                               = $this->prepareData();
+        list($inserted, $updated, $deleted) = $this->prepareChanges($data, $saved);
 
-        foreach ($data as $domain => $settings) {
-            foreach ($settings as $key => $value) {
-                /** @var  Setting  $model */
-                $model = $saved->where('domain', $domain)->where('key', $key)->first();
-
-                if (isset($model)) {
-                    $model->fill([
-                        'value' => $value,
-                    ]);
-
-                    if($model->isDirty()) {
-                        $model->save();
-                    }
-
-                    continue;
-                }
-
-                $this->model->create(compact('domain', 'key', 'value'));
+        foreach ($inserted as $domain => $values) {
+            foreach ($values as $key => $value) {
+                $this->model->createOne($domain, $key, $value);
             }
         }
+
+        $db = $saved->groupBy('domain');
+
+        foreach ($updated as $domain => $values) {
+            foreach ($values as $key => $value) {
+                $model = $db->get($domain)->where('key', $key)->first();
+                $model->updateValue($value);
+                if ($model->isDirty()) {
+                    $model->save();
+                }
+            }
+        }
+        foreach ($deleted as $domain => $values) {
+            foreach ($values as $key) {
+                $model = $db->get($domain)->where('key', $key)->first();
+                $model->delete();
+            }
+        }
+    }
+
+    /**
+     * Grab the settings domain name from the key.
+     *
+     * @param  string  $key
+     *
+     * @return string
+     */
+    private function grabDomain(&$key)
+    {
+        $domain = $this->getDefaultDomain();
+
+        if (str_contains($key, '::')) {
+            list($domain, $key) = explode('::', $key);
+        }
+
+        return $domain;
+    }
+
+    private function prepareChanges($data, $saved)
+    {
+        $inserted = $updated = $deleted = [];
+
+        $db = $saved->groupBy('domain')->map(function($item) {
+            return $item->lists('casted_value', 'key');
+        });
+
+        foreach ($data as $domain => $values) {
+            foreach ($values as $key => $value) {
+                if ($db->get($domain, collect())->has($key)) {
+                    if ($db->get($domain, collect())->get($key) !== $value) {
+                        $updated[$domain][$key] = $value; // Updated
+                    }
+                }
+                else {
+                    $inserted[$domain][$key] = $value; // Inserted
+                }
+            }
+        }
+
+        // Deleted
+        foreach ($db as $domain => $values) {
+            $keys = array_get(array_map('array_keys', $data), $domain, []);
+            $diff = array_diff_key($values->keys()->toArray(), $keys);
+            if ( ! empty($diff)) {
+                $deleted[$domain] = $diff;
+            }
+        }
+
+        return [$inserted, $updated, $deleted];
+    }
+
+    private function prepareData()
+    {
+        $data = [];
+
+        foreach ($this->data as $domain => $settings) {
+            $data[$domain] = $this->dotData($settings);
+        }
+
+        return $data;
+    }
+
+    private function dotData($data, $prepend = null)
+    {
+        $results = [];
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                if (array_keys($value) !== range(0, count($value) - 1)) {
+                    $results = array_merge($results, $this->dotData($value, $prepend.$key.'.'));
+                }
+                else {
+                    $results[$prepend.$key] = $value;
+                }
+            } else {
+                $results[$prepend.$key] = $value;
+            }
+        }
+
+        return $results;
     }
 
     /* ------------------------------------------------------------------------------------------------

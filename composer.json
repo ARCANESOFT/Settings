@@ -1,6 +1,6 @@
 {
     "name":        "arcanesoft/settings",
-    "description": "Persistent settings for Laravel & ARCANESOFT CMS.",
+    "description": "Persistent settings for ARCANESOFT CMS.",
     "keywords":    ["arcanedev", "arcanesoft", "laravel", "setting", "settings", "config", "persistent"],
     "homepage":    "https://github.com/ARCANESOFT/Settings",
     "authors": [

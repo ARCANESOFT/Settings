@@ -36,7 +36,7 @@ class Setting extends Model
     /**
      * {@inheritdoc}
      */
-    public function __construct(array $attributes)
+    public function __construct(array $attributes = [])
     {
         $configs = config('arcanesoft.settings.database');
 
@@ -68,14 +68,30 @@ class Setting extends Model
         return $this->attributes['type'];
     }
 
-    /**
-     * Set value attribute.
-     *
-     * @param  mixed  $value
-     */
-    public function setValueAttribute($value)
+    public function setTypeAttribute($type)
     {
-        $this->attributes['type']  = gettype($value);
-        $this->attributes['value'] = $value;
+        $this->casts['value']    = $type;
+        $this->attributes['type'] = $type;
+    }
+
+    /* ------------------------------------------------------------------------------------------------
+     |  CRUD Functions
+     | ------------------------------------------------------------------------------------------------
+     */
+    public function createOne($domain, $key, $value)
+    {
+        $setting = new self;
+
+        $setting->domain = $domain;
+        $setting->key    = $key;
+        $setting->updateValue($value);
+
+        return $setting->save();
+    }
+
+    public function updateValue($value)
+    {
+        $this->type  = gettype($value);
+        $this->value = $value;
     }
 }

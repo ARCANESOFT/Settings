@@ -76,6 +76,14 @@ class SettingsManager implements Contracts\Settings
      |  Main Functions
      | ------------------------------------------------------------------------------------------------
      */
+    /**
+     * Get a setting by key.
+     *
+     * @param  string      $key
+     * @param  mixed|null  $default
+     *
+     * @return mixed
+     */
     public function get($key, $default = null)
     {
         $this->checkLoaded();
@@ -85,6 +93,12 @@ class SettingsManager implements Contracts\Settings
         return array_get($this->data->get($domain, []), $key, $default);
     }
 
+    /**
+     * Set a setting.
+     *
+     * @param  string  $key
+     * @param  mixed   $value
+     */
     public function set($key, $value)
     {
         $this->checkLoaded();
@@ -102,6 +116,13 @@ class SettingsManager implements Contracts\Settings
         $this->data->put($domain, $data);
     }
 
+    /**
+     * Check if a setting exists by the key.
+     *
+     * @param  string  $key
+     *
+     * @return bool
+     */
     public function has($key)
     {
         $this->checkLoaded();
@@ -115,6 +136,13 @@ class SettingsManager implements Contracts\Settings
         return array_has($this->data->get($domain), $key);
     }
 
+    /**
+     * Get all the setting by a specific domain.
+     *
+     * @param  string|null  $domain
+     *
+     * @return array
+     */
     public function all($domain = null)
     {
         $this->checkLoaded();
@@ -126,6 +154,11 @@ class SettingsManager implements Contracts\Settings
         return $this->data->get($domain, []);
     }
 
+    /**
+     * Delete a setting.
+     *
+     * @param  string  $key
+     */
     public function delete($key)
     {
         $this->checkLoaded();
@@ -148,11 +181,17 @@ class SettingsManager implements Contracts\Settings
         }
     }
 
+    /**
+     * Reset/Delete all the settings.
+     */
     public function reset()
     {
         // TODO: Implement reset() method.
     }
 
+    /**
+     * Save the settings.
+     */
     public function save()
     {
         $saved                              = $this->model->all();
@@ -202,6 +241,14 @@ class SettingsManager implements Contracts\Settings
         return $domain;
     }
 
+    /**
+     * Prepare the changes.
+     *
+     * @param  $data
+     * @param  $saved
+     *
+     * @return array
+     */
     private function prepareChanges($data, $saved)
     {
         $inserted = $updated = $deleted = [];
@@ -235,6 +282,11 @@ class SettingsManager implements Contracts\Settings
         return [$inserted, $updated, $deleted];
     }
 
+    /**
+     * Prepare the data.
+     *
+     * @return array
+     */
     private function prepareData()
     {
         $data = [];
@@ -246,6 +298,14 @@ class SettingsManager implements Contracts\Settings
         return $data;
     }
 
+    /**
+     * Dot the array.
+     *
+     * @param        $data
+     * @param  null  $prepend
+     *
+     * @return array
+     */
     private function dotData($data, $prepend = null)
     {
         $results = [];

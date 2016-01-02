@@ -51,16 +51,6 @@ class Setting extends Model
      | ------------------------------------------------------------------------------------------------
      */
     /**
-     * Get casted value attribute.
-     *
-     * @return mixed
-     */
-    public function getCastedValueAttribute()
-    {
-        return $this->castAttribute('value', $this->attributes['value']);
-    }
-
-    /**
      * {@inheritdoc}
      */
     protected function getCastType($key)
@@ -68,15 +58,29 @@ class Setting extends Model
         return $this->attributes['type'];
     }
 
+    /**
+     * Set the type attributes.
+     *
+     * @param  string  $type
+     */
     public function setTypeAttribute($type)
     {
-        $this->casts['value']    = $type;
+        $this->casts['value']     = $type;
         $this->attributes['type'] = $type;
     }
 
     /* ------------------------------------------------------------------------------------------------
      |  CRUD Functions
      | ------------------------------------------------------------------------------------------------
+     */
+    /**
+     * Create a setting.
+     *
+     * @param  string  $domain
+     * @param  string  $key
+     * @param  mixed   $value
+     *
+     * @return bool
      */
     public function createOne($domain, $key, $value)
     {
@@ -89,6 +93,11 @@ class Setting extends Model
         return $setting->save();
     }
 
+    /**
+     * Update the setting value.
+     *
+     * @param  mixed  $value
+     */
     public function updateValue($value)
     {
         $this->type  = gettype($value);

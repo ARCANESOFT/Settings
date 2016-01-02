@@ -4,7 +4,7 @@
 [![HHVM Status][badge_hhvm]](http://hhvm.h4cc.de/package/arcanesoft/settings)
 [![Coverage Status][badge_coverage]](https://scrutinizer-ci.com/g/ARCANESOFT/Settings/?branch=master)
 [![Scrutinizer Code Quality][badge_quality]](https://scrutinizer-ci.com/g/ARCANESOFT/Settings/?branch=master)
-[![SensioLabs Insight][badge_insight]](https://insight.sensiolabs.com/projects/04aaa312-6cb3-41ba-aaec-8cc3176dbdf6)
+[![SensioLabs Insight][badge_insight]](https://insight.sensiolabs.com/projects/6f7245df-02d1-4a72-b6c9-a6b87d875275)
 [![Github Issues][badge_issues]](https://github.com/ARCANESOFT/Settings/issues)
 
 [![Packagist][badge_package]](https://packagist.org/packages/arcanesoft/settings)
@@ -18,7 +18,7 @@
 [badge_hhvm]:      https://img.shields.io/hhvm/arcanesoft/settings.svg?style=flat-square
 [badge_coverage]:  https://img.shields.io/scrutinizer/coverage/g/ARCANESOFT/Settings.svg?style=flat-square
 [badge_quality]:   https://img.shields.io/scrutinizer/g/ARCANESOFT/Settings.svg?style=flat-square
-[badge_insight]:   https://img.shields.io/sensiolabs/i/04aaa312-6cb3-41ba-aaec-8cc3176dbdf6.svg?style=flat-square
+[badge_insight]:   https://img.shields.io/sensiolabs/i/6f7245df-02d1-4a72-b6c9-a6b87d875275.svg?style=flat-square
 [badge_issues]:    http://img.shields.io/github/issues/ARCANESOFT/Settings.svg?style=flat-square
 
 [badge_package]:   https://img.shields.io/badge/package-arcanesoft/settings-blue.svg?style=flat-square

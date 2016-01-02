@@ -1,0 +1,41 @@
+{
+    "name":        "arcanesoft/settings",
+    "description": "Persistent settings for Laravel & ARCANESOFT CMS.",
+    "keywords":    ["arcanedev", "arcanesoft", "laravel", "setting", "settings", "config", "persistent"],
+    "homepage":    "https://github.com/ARCANESOFT/Settings",
+    "authors": [
+        {
+            "name":     "ARCANEDEV",
+            "email":    "arcanedev.maroc@gmail.com",
+            "homepage": "https://github.com/arcanedev-maroc",
+            "role":     "Developer"
+        }
+    ],
+    "type":    "library",
+    "license": "MIT",
+    "require": {
+        "php" :                ">=5.5.9",
+        "arcanedev/support":   "~3.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "~3.1.0",
+        "phpunit/phpcov":      "~2.0",
+        "phpunit/phpunit":     "~4.0|~5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Arcanesoft\\Settings\\": "src/"
+        },
+        "files": ["helpers.php"]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Arcanesoft\\Settings\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}

@@ -7,6 +7,14 @@ use Arcanedev\Support\Bases\Model;
  *
  * @package  Arcanesoft\Settings\Models
  * @author   ARCANEDEV <arcanedev.maroc@gmail.com>
+ *
+ * @property  int             id
+ * @property  string          domain
+ * @property  string          key
+ * @property  mixed           value
+ * @property  mixed           type
+ * @property  \Carbon\Carbon  created_at
+ * @property  \Carbon\Carbon  updated_at
  */
 class Setting extends Model
 {

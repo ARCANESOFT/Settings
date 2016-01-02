@@ -4,7 +4,7 @@
 [![HHVM Status][badge_hhvm]](http://hhvm.h4cc.de/package/arcanesoft/settings)
 [![Coverage Status][badge_coverage]](https://scrutinizer-ci.com/g/ARCANESOFT/Settings/?branch=master)
 [![Scrutinizer Code Quality][badge_quality]](https://scrutinizer-ci.com/g/ARCANESOFT/Settings/?branch=master)
-[![SensioLabs Insight][badge_insight]](https://insight.sensiolabs.com/projects/b47822f0-fe51-483b-9965-edfc5bcae84a)
+[![SensioLabs Insight][badge_insight]](https://insight.sensiolabs.com/projects/04aaa312-6cb3-41ba-aaec-8cc3176dbdf6)
 [![Github Issues][badge_issues]](https://github.com/ARCANESOFT/Settings/issues)
 
 [![Packagist][badge_package]](https://packagist.org/packages/arcanesoft/settings)
@@ -18,7 +18,7 @@
 [badge_hhvm]:      https://img.shields.io/hhvm/arcanesoft/settings.svg?style=flat-square
 [badge_coverage]:  https://img.shields.io/scrutinizer/coverage/g/ARCANESOFT/Settings.svg?style=flat-square
 [badge_quality]:   https://img.shields.io/scrutinizer/g/ARCANESOFT/Settings.svg?style=flat-square
-[badge_insight]:   https://img.shields.io/sensiolabs/i/b47822f0-fe51-483b-9965-edfc5bcae84a.svg?style=flat-square
+[badge_insight]:   https://img.shields.io/sensiolabs/i/04aaa312-6cb3-41ba-aaec-8cc3176dbdf6.svg?style=flat-square
 [badge_issues]:    http://img.shields.io/github/issues/ARCANESOFT/Settings.svg?style=flat-square
 
 [badge_package]:   https://img.shields.io/badge/package-arcanesoft/settings-blue.svg?style=flat-square
@@ -49,6 +49,7 @@ Feel free to check out the [releases](https://github.com/ARCANESOFT/Settings/rel
 
 ### TODOS
 
+  - [ ] Refactoring.
   - [ ] 100% Code coverage + Maximum code quality.
   - [ ] Complete the documentation.
 

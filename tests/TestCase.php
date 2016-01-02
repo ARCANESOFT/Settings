@@ -49,5 +49,26 @@ abstract class TestCase extends BaseTestCase
             'database' => ':memory:',
             'prefix'   => '',
         ]);
+
+        $config->set('arcanesoft.settings.database.connection', 'testing');
+    }
+
+    /* ------------------------------------------------------------------------------------------------
+     |  Other Functions
+     | ------------------------------------------------------------------------------------------------
+     */
+    protected function migrate()
+    {
+        $this->artisan('vendor:publish', [
+            '--provider' => \Arcanesoft\Settings\SettingsServiceProvider::class,
+            '--tag'      => ['migrations'],
+        ]);
+
+        $this->artisan('migrate');
+    }
+
+    protected function resetMigrations()
+    {
+        $this->artisan('migrate:reset');
     }
 }

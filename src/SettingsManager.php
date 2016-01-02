@@ -158,7 +158,6 @@ class SettingsManager implements Contracts\Settings
                     if($model->isDirty()) {
                         $model->save();
                     }
-                    var_dump($model->isDirty());
 
                     continue;
                 }

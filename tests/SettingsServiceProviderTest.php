@@ -59,6 +59,7 @@ class SettingsServiceProviderTest extends TestCase
     {
         $expected = [
             'arcanesoft.settings.manager',
+            \Arcanesoft\Settings\Contracts\Settings::class,
         ];
 
         $this->assertEquals($expected, $this->provider->provides());

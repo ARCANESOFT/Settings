@@ -11,6 +11,24 @@ use Orchestra\Testbench\TestCase as BaseTestCase;
 abstract class TestCase extends BaseTestCase
 {
     /* ------------------------------------------------------------------------------------------------
+     |  Main Functions
+     | ------------------------------------------------------------------------------------------------
+     */
+    public function setUp()
+    {
+        parent::setUp();
+
+        $this->migrate();
+    }
+
+    public function tearDown()
+    {
+        $this->resetMigrations();
+
+        parent::tearDown();
+    }
+
+    /* ------------------------------------------------------------------------------------------------
      |  Laravel Functions
      | ------------------------------------------------------------------------------------------------
      */
@@ -35,6 +53,19 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
+     * Resolve application HTTP Kernel implementation.
+     *
+     * @param  \Illuminate\Foundation\Application  $app
+     */
+    protected function resolveApplicationHttpKernel($app)
+    {
+        $app->singleton(
+            \Illuminate\Contracts\Http\Kernel::class,
+            \Arcanesoft\Settings\Tests\Stubs\HttpKernel::class
+        );
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function getEnvironmentSetUp($app)
@@ -51,6 +82,12 @@ abstract class TestCase extends BaseTestCase
         ]);
 
         $config->set('arcanesoft.settings.database.connection', 'testing');
+
+        /** @var \Illuminate\Routing\Router $router */
+        $router = $app['router'];
+        $router->get('/', function () {
+            return 'Dummy response';
+        });
     }
 
     /* ------------------------------------------------------------------------------------------------

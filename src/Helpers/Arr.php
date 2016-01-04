@@ -1,12 +1,14 @@
 <?php namespace Arcanesoft\Settings\Helpers;
 
+use Illuminate\Support\Arr as IlluminateArr;
+
 /**
  * Class     Arr
  *
  * @package  Arcanesoft\Settings\Helpers
  * @author   ARCANEDEV <arcanedev.maroc@gmail.com>
  */
-class Arr extends \Illuminate\Support\Arr
+class Arr extends IlluminateArr
 {
     /**
      * Flatten a multi-dimensional associative array with dots.

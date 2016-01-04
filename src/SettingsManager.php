@@ -1,6 +1,7 @@
 <?php namespace Arcanesoft\Settings;
 
 use Arcanedev\Support\Collection;
+use Arcanesoft\Settings\Helpers\Arr;
 use Arcanesoft\Settings\Models\Setting;
 
 /**
@@ -90,7 +91,7 @@ class SettingsManager implements Contracts\Settings
 
         $domain = $this->grabDomain($key);
 
-        return array_get($this->data->get($domain, []), $key, $default);
+        return Arr::get($this->data->get($domain, []), $key, $default);
     }
 
     /**
@@ -111,7 +112,7 @@ class SettingsManager implements Contracts\Settings
             $data = $this->data->get($domain, []);
         }
 
-        array_set($data, $key, $value);
+        Arr::set($data, $key, $value);
 
         $this->data->put($domain, $data);
     }
@@ -133,7 +134,7 @@ class SettingsManager implements Contracts\Settings
             return false;
         }
 
-        return array_has($this->data->get($domain), $key);
+        return Arr::has($this->data->get($domain), $key);
     }
 
     /**
@@ -170,7 +171,7 @@ class SettingsManager implements Contracts\Settings
         }
 
         $data = $this->data->get($domain, []);
-        array_forget($data, $key);
+        Arr::forget($data, $key);
         $data = array_filter($data);
 
         if (empty($data)) {
@@ -194,31 +195,29 @@ class SettingsManager implements Contracts\Settings
      */
     public function save()
     {
-        $saved                              = $this->model->all();
-        $data                               = $this->prepareData();
-        list($inserted, $updated, $deleted) = $this->prepareChanges($data, $saved);
+        $saved   = $this->model->all();
+        $changes = $this->prepareChanges($saved);
 
-        foreach ($inserted as $domain => $values) {
+        foreach ($changes['inserted'] as $domain => $values) {
             foreach ($values as $key => $value) {
                 $this->model->createOne($domain, $key, $value);
             }
         }
 
-        $db = $saved->groupBy('domain');
-
-        foreach ($updated as $domain => $values) {
+        foreach ($changes['updated'] as $domain => $values) {
             foreach ($values as $key => $value) {
                 /** @var Setting $model */
-                $model = $db->get($domain)->where('key', $key)->first();
+                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
                 $model->updateValue($value);
                 if ($model->isDirty()) {
                     $model->save();
                 }
             }
         }
-        foreach ($deleted as $domain => $values) {
+
+        foreach ($changes['deleted'] as $domain => $values) {
             foreach ($values as $key) {
-                $model = $db->get($domain)->where('key', $key)->first();
+                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
                 $model->delete();
             }
         }
@@ -245,16 +244,18 @@ class SettingsManager implements Contracts\Settings
     /**
      * Prepare the changes.
      *
-     * @param  $data
-     * @param  $saved
+     * @param  \Illuminate\Database\Eloquent\Collection  $saved
      *
      * @return array
      */
-    private function prepareChanges($data, $saved)
+    private function prepareChanges($saved)
     {
         $inserted = $updated = $deleted = [];
-
-        $db = $saved->groupBy('domain')->map(function($item) {
+        $data     = $this->data->map(function (array $settings) {
+            return Arr::dot($settings);
+        });
+        $db       = $saved->groupBy('domain')->map(function($item) {
+            /** @var  \Illuminate\Database\Eloquent\Collection  $item */
             return $item->lists('casted_value', 'key');
         });
 
@@ -273,58 +274,18 @@ class SettingsManager implements Contracts\Settings
 
         // Deleted
         foreach ($db as $domain => $values) {
-            $keys = array_get(array_map('array_keys', $data), $domain, []);
-            $diff = array_diff_key($values->keys()->toArray(), $keys);
+            /** @var  \Illuminate\Database\Eloquent\Collection  $values */
+            $diff = array_diff_key(
+                $values->keys()->toArray(),
+                Arr::get($data->keys()->toArray(), $domain, [])
+            );
+
             if ( ! empty($diff)) {
                 $deleted[$domain] = $diff;
             }
         }
 
-        return [$inserted, $updated, $deleted];
-    }
-
-    /**
-     * Prepare the data.
-     *
-     * @return array
-     */
-    private function prepareData()
-    {
-        $data = [];
-
-        foreach ($this->data as $domain => $settings) {
-            $data[$domain] = $this->dotData($settings);
-        }
-
-        return $data;
-    }
-
-    /**
-     * Dot the array.
-     *
-     * @param        $data
-     * @param  null  $prepend
-     *
-     * @return array
-     */
-    private function dotData($data, $prepend = null)
-    {
-        $results = [];
-
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                if (array_keys($value) !== range(0, count($value) - 1)) {
-                    $results = array_merge($results, $this->dotData($value, $prepend.$key.'.'));
-                }
-                else {
-                    $results[$prepend.$key] = $value;
-                }
-            } else {
-                $results[$prepend.$key] = $value;
-            }
-        }
-
-        return $results;
+        return compact('inserted', 'updated', 'deleted');
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -352,7 +313,7 @@ class SettingsManager implements Contracts\Settings
             /** @var Setting $setting */
             $data = $this->data->get($setting->domain, []);
 
-            array_set($data, $setting->key, $setting->casted_value);
+            Arr::set($data, $setting->key, $setting->casted_value);
 
             $this->data->put($setting->domain, $data);
         }

@@ -208,6 +208,7 @@ class SettingsManager implements Contracts\Settings
 
         foreach ($updated as $domain => $values) {
             foreach ($values as $key => $value) {
+                /** @var Setting $model */
                 $model = $db->get($domain)->where('key', $key)->first();
                 $model->updateValue($value);
                 if ($model->isDirty()) {

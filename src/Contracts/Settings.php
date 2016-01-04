@@ -57,8 +57,10 @@ interface Settings
 
     /**
      * Reset/Delete all the settings.
+     *
+     * @param  string|null  $domain
      */
-    public function reset();
+    public function reset($domain = null);
 
     /**
      * Save the settings.

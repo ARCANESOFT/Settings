@@ -184,10 +184,18 @@ class SettingsManager implements Contracts\Settings
 
     /**
      * Reset/Delete all the settings.
+     *
+     * @param  string|null  $domain
      */
-    public function reset()
+    public function reset($domain = null)
     {
-        // TODO: Implement reset() method.
+        $this->checkLoaded();
+
+        if (is_null($domain)) {
+            $domain = $this->getDefaultDomain();
+        }
+
+        $this->data->forget($domain);
     }
 
     /**

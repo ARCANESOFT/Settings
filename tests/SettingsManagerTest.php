@@ -98,9 +98,7 @@ class SettingsManagerTest extends TestCase
 
         $this->settings->set('foo', 'bar');
 
-        $this->settings->save();
-
-        $this->settings = $this->makeSettings();
+        $this->saveAndMakeSettings();
 
         $this->assertNotEmpty($this->settings->all());
 
@@ -113,9 +111,7 @@ class SettingsManagerTest extends TestCase
     {
         $this->settings->set('array', ['val-1', 'val-2', 'val-3']);
 
-        $this->settings->save();
-
-        $this->settings = $this->makeSettings();
+        $this->saveAndMakeSettings();
 
         $this->assertNotEmpty($this->settings->all());
 
@@ -127,17 +123,13 @@ class SettingsManagerTest extends TestCase
     public function it_can_delete()
     {
         $this->settings->set('foo', 'bar');
-        $this->settings->save();
-
-        $this->settings = $this->makeSettings();
+        $this->saveAndMakeSettings();
 
         $this->assertTrue($this->settings->has('foo'));
         $this->assertEquals('bar', $this->settings->get('foo'));
 
         $this->settings->delete('foo');
-        $this->settings->save();
-
-        $this->settings = $this->makeSettings();
+        $this->saveAndMakeSettings();
 
         $this->assertFalse($this->settings->has('foo'));
         $this->assertNull($this->settings->get('foo'));
@@ -181,6 +173,22 @@ class SettingsManagerTest extends TestCase
         $this->assertNull($this->settings->get('test::baz'));
     }
 
+    /** @test */
+    public function it_can_reset()
+    {
+        $this->settings->set('foo', 'bar');
+        $this->settings->set('baz', 'qux');
+
+        $this->saveAndMakeSettings();
+
+        $this->assertCount(2, $this->settings->all());
+
+        $this->settings->reset();
+        $this->saveAndMakeSettings();
+
+        $this->assertCount(0, $this->settings->all());
+    }
+
     /* ------------------------------------------------------------------------------------------------
      |  Other Functions
      | ------------------------------------------------------------------------------------------------
@@ -193,5 +201,17 @@ class SettingsManagerTest extends TestCase
     private function makeSettings()
     {
         return $this->app->make('arcanesoft.settings.manager');
+    }
+
+    /**
+     * Save and make the settings.
+     *
+     * @return \Arcanesoft\Settings\Contracts\Settings
+     */
+    private function saveAndMakeSettings()
+    {
+        $this->settings->save();
+
+        return $this->settings = $this->makeSettings();
     }
 }

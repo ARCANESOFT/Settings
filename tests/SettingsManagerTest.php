@@ -123,6 +123,64 @@ class SettingsManagerTest extends TestCase
         $this->assertEquals(['val-1', 'val-2', 'val-3'], $this->settings->get('array'));
     }
 
+    /** @test */
+    public function it_can_delete()
+    {
+        $this->settings->set('foo', 'bar');
+        $this->settings->save();
+
+        $this->settings = $this->makeSettings();
+
+        $this->assertTrue($this->settings->has('foo'));
+        $this->assertEquals('bar', $this->settings->get('foo'));
+
+        $this->settings->delete('foo');
+        $this->settings->save();
+
+        $this->settings = $this->makeSettings();
+
+        $this->assertFalse($this->settings->has('foo'));
+        $this->assertNull($this->settings->get('foo'));
+    }
+
+    /** @test */
+    public function it_can_delete_from_domain()
+    {
+        $this->settings->set('test::foo', 'bar');
+        $this->settings->set('test::baz', 'qux');
+        $this->settings->save();
+
+        $this->settings = $this->makeSettings();
+
+        $this->assertCount(2, $this->settings->all('test'));
+        $this->assertTrue($this->settings->has('test::foo'));
+        $this->assertEquals('bar', $this->settings->get('test::foo'));
+        $this->assertTrue($this->settings->has('test::baz'));
+        $this->assertEquals('qux', $this->settings->get('test::baz'));
+
+        $this->settings->delete('test::foo');
+        $this->settings->save();
+
+        $this->settings = $this->makeSettings();
+
+        $this->assertCount(1, $this->settings->all('test'));
+        $this->assertFalse($this->settings->has('test::foo'));
+        $this->assertNull($this->settings->get('test::foo'));
+        $this->assertTrue($this->settings->has('test::baz'));
+        $this->assertEquals('qux', $this->settings->get('test::baz'));
+
+        $this->settings->delete('test::baz');
+        $this->settings->save();
+
+        $this->settings = $this->makeSettings();
+
+        $this->assertCount(0, $this->settings->all('test'));
+        $this->assertFalse($this->settings->has('test::foo'));
+        $this->assertNull($this->settings->get('test::foo'));
+        $this->assertFalse($this->settings->has('test::baz'));
+        $this->assertNull($this->settings->get('test::baz'));
+    }
+
     /* ------------------------------------------------------------------------------------------------
      |  Other Functions
      | ------------------------------------------------------------------------------------------------

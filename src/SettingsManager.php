@@ -105,11 +105,10 @@ class SettingsManager implements Contracts\Settings
         $this->checkLoaded();
 
         $domain = $this->grabDomain($key);
-
-        $data = [];
+        $data   = [];
 
         if ($this->data->has($domain)) {
-            $data = $this->data->get($domain, []);
+            $data = $this->data->get($domain);
         }
 
         Arr::set($data, $key, $value);
@@ -217,9 +216,7 @@ class SettingsManager implements Contracts\Settings
                 /** @var Setting $model */
                 $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
                 $model->updateValue($value);
-                if ($model->isDirty()) {
-                    $model->save();
-                }
+                $model->save();
             }
         }
 
@@ -262,6 +259,7 @@ class SettingsManager implements Contracts\Settings
         $data     = $this->data->map(function (array $settings) {
             return Arr::dot($settings);
         });
+
         $db       = $saved->groupBy('domain')->map(function($item) {
             /** @var  \Illuminate\Database\Eloquent\Collection  $item */
             return $item->lists('casted_value', 'key');
@@ -281,15 +279,22 @@ class SettingsManager implements Contracts\Settings
         }
 
         // Deleted
-        foreach ($db as $domain => $values) {
-            /** @var  \Illuminate\Database\Eloquent\Collection  $values */
-            $diff = array_diff_key(
-                $values->keys()->toArray(),
-                Arr::get($data->keys()->toArray(), $domain, [])
-            );
+        if ($data->isEmpty()) {
+            $deleted = $db->map(function ($settings) {
+                /** @var \Illuminate\Database\Eloquent\Collection $settings */
+                return $settings->keys()->toArray();
+            })->toArray();
+        }
+        else {
+            foreach ($data as $domain => $values) {
+                $diff = array_diff(
+                    $db->get($domain, collect())->keys()->toArray(),
+                    array_keys($values)
+                );
 
-            if ( ! empty($diff)) {
-                $deleted[$domain] = $diff;
+                if ( ! empty($diff)) {
+                    $deleted[$domain] = $diff;
+                }
             }
         }
 
@@ -305,11 +310,13 @@ class SettingsManager implements Contracts\Settings
      */
     private function checkLoaded()
     {
-        if ( ! $this->loaded) {
-            $this->data->reset();
-            $this->loadData();
-            $this->loaded = true;
+        if ($this->loaded) {
+            return;
         }
+
+        $this->data->reset();
+        $this->loadData();
+        $this->loaded = true;
     }
 
     /**

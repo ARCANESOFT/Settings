@@ -1,5 +1,6 @@
 <?php namespace Arcanesoft\Settings\Tests;
 
+use Arcanesoft\Settings\Models\Setting;
 use Arcanesoft\Settings\SettingsManager;
 
 /**
@@ -101,7 +102,6 @@ class SettingsManagerTest extends TestCase
         $this->saveAndMakeSettings();
 
         $this->assertNotEmpty($this->settings->all());
-
         $this->assertTrue($this->settings->has('foo'));
         $this->assertEquals('bar', $this->settings->get('foo'));
     }
@@ -140,9 +140,7 @@ class SettingsManagerTest extends TestCase
     {
         $this->settings->set('test::foo', 'bar');
         $this->settings->set('test::baz', 'qux');
-        $this->settings->save();
-
-        $this->settings = $this->makeSettings();
+        $this->saveAndMakeSettings();
 
         $this->assertCount(2, $this->settings->all('test'));
         $this->assertTrue($this->settings->has('test::foo'));
@@ -151,9 +149,7 @@ class SettingsManagerTest extends TestCase
         $this->assertEquals('qux', $this->settings->get('test::baz'));
 
         $this->settings->delete('test::foo');
-        $this->settings->save();
-
-        $this->settings = $this->makeSettings();
+        $this->saveAndMakeSettings();
 
         $this->assertCount(1, $this->settings->all('test'));
         $this->assertFalse($this->settings->has('test::foo'));
@@ -162,9 +158,7 @@ class SettingsManagerTest extends TestCase
         $this->assertEquals('qux', $this->settings->get('test::baz'));
 
         $this->settings->delete('test::baz');
-        $this->settings->save();
-
-        $this->settings = $this->makeSettings();
+        $this->settings = $this->saveAndMakeSettings();
 
         $this->assertCount(0, $this->settings->all('test'));
         $this->assertFalse($this->settings->has('test::foo'));
@@ -200,7 +194,7 @@ class SettingsManagerTest extends TestCase
      */
     private function makeSettings()
     {
-        return $this->app->make('arcanesoft.settings.manager');
+        return new SettingsManager(new Setting);
     }
 
     /**

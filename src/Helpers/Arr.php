@@ -26,11 +26,12 @@ class Arr extends IlluminateArr
             if (is_array($value)) {
                 if (self::isAssoc($value)) {
                     $results = array_merge($results, self::dot($value, $prepend.$key.'.'));
+
+                    continue;
                 }
             }
-            else {
-                $results[$prepend.$key] = $value;
-            }
+
+            $results[$prepend.$key] = $value;
         }
 
         return $results;

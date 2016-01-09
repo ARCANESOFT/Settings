@@ -18,6 +18,7 @@
         "arcanedev/support":   "~3.0"
     },
     "require-dev": {
+        "laravel/framework":   "~5.1.0",
         "orchestra/testbench": "~3.1.0",
         "phpunit/phpcov":      "~2.0",
         "phpunit/phpunit":     "~4.0|~5.0"

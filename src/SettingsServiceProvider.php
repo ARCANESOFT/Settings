@@ -63,6 +63,10 @@ class SettingsServiceProvider extends PackageServiceProvider
     {
         $this->registerConfig();
         $this->registerSettingsManager();
+
+        if ($this->app->runningInConsole()) {
+            $this->app->register(Providers\CommandServiceProvider::class);
+        }
     }
 
     /**

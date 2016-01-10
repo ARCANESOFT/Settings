@@ -4,7 +4,7 @@ if ( ! function_exists('settings')) {
     /**
      * Get the SettingManager instance.
      *
-     * @return \Arcanesoft\Settings\SettingsManager
+     * @return \Arcanesoft\Settings\Contracts\Settings
      */
     function settings()
     {

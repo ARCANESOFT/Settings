@@ -101,7 +101,7 @@ class SettingsServiceProvider extends PackageServiceProvider
     {
         $this->singleton(
             'arcanesoft.settings.manager',
-            SettingsManager::class
+            \Arcanesoft\Settings\SettingsManager::class
         );
 
         $this->bind(

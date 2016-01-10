@@ -11,9 +11,9 @@ use Arcanedev\Support\Providers\CommandServiceProvider as ServiceProvider;
 class CommandServiceProvider extends ServiceProvider
 {
     /* ------------------------------------------------------------------------------------------------
-         |  Main Functions
-         | ------------------------------------------------------------------------------------------------
-         */
+     |  Main Functions
+     | ------------------------------------------------------------------------------------------------
+     */
     /**
      * Register the service provider.
      */

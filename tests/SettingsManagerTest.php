@@ -194,7 +194,10 @@ class SettingsManagerTest extends TestCase
      */
     private function makeSettings()
     {
-        return new SettingsManager(new Setting);
+        return new SettingsManager(
+            new Setting,
+            $this->app[\Illuminate\Contracts\Cache\Repository::class]
+        );
     }
 
     /**

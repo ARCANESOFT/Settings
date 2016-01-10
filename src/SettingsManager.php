@@ -3,6 +3,7 @@
 use Arcanedev\Support\Collection;
 use Arcanesoft\Settings\Helpers\Arr;
 use Arcanesoft\Settings\Models\Setting;
+use Illuminate\Contracts\Cache\Repository as Cache;
 
 /**
  * Class     SettingsManager
@@ -44,6 +45,13 @@ class SettingsManager implements Contracts\Settings
      */
     private $model;
 
+    /**
+     * The cache repository
+     *
+     * @var \Illuminate\Contracts\Cache\Repository
+     */
+    private $cache;
+
     /* ------------------------------------------------------------------------------------------------
      |  Constructor
      | ------------------------------------------------------------------------------------------------
@@ -51,11 +59,13 @@ class SettingsManager implements Contracts\Settings
     /**
      * SettingsManager constructor.
      *
-     * @param  Setting  $model
+     * @param  \Arcanesoft\Settings\Models\Setting     $model
+     * @param  \Illuminate\Contracts\Cache\Repository  $cache
      */
-    public function __construct(Setting $model)
+    public function __construct(Setting $model, Cache $cache)
     {
         $this->model = $model;
+        $this->cache = $cache;
         $this->data  = new Collection;
     }
 
@@ -70,7 +80,40 @@ class SettingsManager implements Contracts\Settings
      */
     protected function getDefaultDomain()
     {
-        return config('arcanesoft.settings.default-domain', 'default');
+        return $this->config('default-domain', 'default');
+    }
+
+    /**
+     * Get the cache key.
+     *
+     * @return string
+     */
+    protected function getCacheKey()
+    {
+        return $this->config('cache.key', 'cached_settings');
+    }
+
+    /**
+     * Check if cache is enabled.
+     *
+     * @return bool
+     */
+    protected function isCached()
+    {
+        return $this->config('cache.enabled', false);
+    }
+
+    /**
+     * Get the config value by key.
+     *
+     * @param  string  $key
+     * @param  mixed   $default
+     *
+     * @return mixed
+     */
+    private function config($key, $default = null)
+    {
+        return config("arcanesoft.settings.$key", $default);
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -226,6 +269,8 @@ class SettingsManager implements Contracts\Settings
                 $model->delete();
             }
         }
+
+        $this->flushCachedSettings();
     }
 
     /**
@@ -324,13 +369,39 @@ class SettingsManager implements Contracts\Settings
      */
     private function loadData()
     {
-        foreach ($this->model->all() as $setting) {
+        foreach ($this->getCachedSettings() as $setting) {
             /** @var Setting $setting */
             $data = $this->data->get($setting->domain, []);
 
             Arr::set($data, $setting->key, $setting->casted_value);
 
             $this->data->put($setting->domain, $data);
+        }
+    }
+
+    /**
+     * Get cached settings.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    private function getCachedSettings()
+    {
+        if ($this->isCached()) {
+            return $this->cache->rememberForever($this->getCacheKey(), function() {
+                return $this->model->all();
+            });
+        }
+
+        return $this->model->all();
+    }
+
+    /**
+     * Flush the cached settings.
+     */
+    private function flushCachedSettings()
+    {
+        if ($this->isCached()) {
+            $this->cache->forget($this->getCacheKey());
         }
     }
 }

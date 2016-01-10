@@ -12,4 +12,10 @@ return [
         'table'      => 'settings',
         'model'      => \Arcanesoft\Settings\Models\Setting::class,
     ],
+
+    'cache'          => [
+        'enabled'   => true,
+
+        'key'       => 'cached_settings'
+    ],
 ];

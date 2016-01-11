@@ -1,0 +1,13 @@
+languages:
+   PHP: true
+
+exclude_paths:
+- "spec/*"
+- "vendor/*"
+- "tests/*"
+
+engines:
+  phpcodesniffer:
+    enabled: true
+  phpmd:
+    enabled: true

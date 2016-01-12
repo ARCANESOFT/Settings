@@ -2,6 +2,7 @@
 
 use Arcanedev\Support\Collection;
 use Arcanesoft\Settings\Helpers\Arr;
+use Arcanesoft\Settings\Helpers\Comparator;
 use Arcanesoft\Settings\Models\Setting;
 use Illuminate\Contracts\Cache\Repository as Cache;
 
@@ -38,19 +39,8 @@ class SettingsManager implements Contracts\Settings
      */
     protected $loaded = false;
 
-    /**
-     * The Setting model.
-     *
-     * @var \Arcanesoft\Settings\Models\Setting
-     */
-    private $model;
-
-    /**
-     * The cache repository
-     *
-     * @var \Illuminate\Contracts\Cache\Repository
-     */
-    private $cache;
+    /** @var  \Arcanesoft\Settings\Stores\EloquentStore  */
+    private $store;
 
     /* ------------------------------------------------------------------------------------------------
      |  Constructor
@@ -64,8 +54,7 @@ class SettingsManager implements Contracts\Settings
      */
     public function __construct(Setting $model, Cache $cache)
     {
-        $this->model = $model;
-        $this->cache = $cache;
+        $this->store = new Stores\EloquentStore($model, $cache);
         $this->data  = new Collection;
     }
 
@@ -81,26 +70,6 @@ class SettingsManager implements Contracts\Settings
     protected function getDefaultDomain()
     {
         return $this->config('default-domain', 'default');
-    }
-
-    /**
-     * Get the cache key.
-     *
-     * @return string
-     */
-    protected function getCacheKey()
-    {
-        return $this->config('cache.key', 'cached_settings');
-    }
-
-    /**
-     * Check if cache is enabled.
-     *
-     * @return bool
-     */
-    protected function isCached()
-    {
-        return $this->config('cache.enabled', false);
     }
 
     /**
@@ -246,16 +215,10 @@ class SettingsManager implements Contracts\Settings
     public function save()
     {
         $changes = $this->getChanges(
-            $saved = $this->model->all()
+            $saved = $this->store->all()
         );
 
-        $this->saveInserted($changes['inserted']);
-        $this->saveUpdated($saved, $changes['updated']);
-        $this->saveDeleted($saved, $changes['deleted']);
-
-        if ($this->isCached()) {
-            $this->cache->forget($this->getCacheKey());
-        }
+        $this->store->save($saved, $changes);
     }
 
     /**
@@ -267,7 +230,7 @@ class SettingsManager implements Contracts\Settings
      */
     private function getChanges($saved)
     {
-        return Helpers\Comparator::compare(
+        return Comparator::compare(
             $this->data->map(function (array $settings) {
                 return Arr::dot($settings);
             })->toArray(),
@@ -276,55 +239,6 @@ class SettingsManager implements Contracts\Settings
                 return $item->lists('casted_value', 'key');
             })->toArray()
         );
-    }
-
-    /**
-     * Save the inserted entries.
-     *
-     * @param  array  $inserted
-     */
-    private function saveInserted(array $inserted)
-    {
-        foreach ($inserted as $domain => $values) {
-            foreach ($values as $key => $value) {
-                $this->model->createOne($domain, $key, $value);
-            }
-        }
-    }
-
-    /**
-     * Save the updated entries.
-     *
-     * @param  \Illuminate\Database\Eloquent\Collection  $saved
-     * @param  array                                     $updated
-     */
-    private function saveUpdated($saved, array $updated)
-    {
-        foreach ($updated as $domain => $values) {
-            foreach ($values as $key => $value) {
-                /** @var  \Arcanesoft\Settings\Models\Setting  $model */
-                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
-                $model->updateValue($value);
-                $model->save();
-            }
-        }
-    }
-
-    /**
-     * Save the deleted entries.
-     *
-     * @param  \Illuminate\Database\Eloquent\Collection  $saved
-     * @param  array                                     $deleted
-     */
-    private function saveDeleted($saved, array $deleted)
-    {
-        foreach ($deleted as $domain => $values) {
-            foreach ($values as $key) {
-                /** @var  \Arcanesoft\Settings\Models\Setting  $model */
-                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
-                $model->delete();
-            }
-        }
     }
 
     /**
@@ -354,13 +268,11 @@ class SettingsManager implements Contracts\Settings
      */
     private function checkLoaded()
     {
-        if ($this->loaded) {
-            return;
+        if ( ! $this->loaded) {
+            $this->data->reset();
+            $this->loadData();
+            $this->loaded = true;
         }
-
-        $this->data->reset();
-        $this->loadData();
-        $this->loaded = true;
     }
 
     /**
@@ -368,27 +280,11 @@ class SettingsManager implements Contracts\Settings
      */
     private function loadData()
     {
-        foreach ($this->getCachedSettings() as $setting) {
+        foreach ($this->store->all() as $setting) {
             /** @var  \Arcanesoft\Settings\Models\Setting  $setting */
             $data = $this->data->get($setting->domain, []);
-
             Arr::set($data, $setting->key, $setting->casted_value);
-
             $this->data->put($setting->domain, $data);
         }
-    }
-
-    /**
-     * Get cached settings.
-     *
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    private function getCachedSettings()
-    {
-        return ! $this->isCached()
-            ? $this->model->all()
-            : $this->cache->rememberForever($this->getCacheKey(), function() {
-                return $this->model->all();
-            });
     }
 }

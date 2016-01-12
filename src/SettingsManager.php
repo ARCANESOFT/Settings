@@ -246,7 +246,7 @@ class SettingsManager implements Contracts\Settings
     public function save()
     {
         $saved   = $this->model->all();
-        $changes = $this->prepareChanges($saved);
+        $changes = $this->getChanges($saved);
 
         foreach ($changes['inserted'] as $domain => $values) {
             foreach ($values as $key => $value) {
@@ -274,6 +274,26 @@ class SettingsManager implements Contracts\Settings
     }
 
     /**
+     * Get the changes.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $saved
+     *
+     * @return array
+     */
+    private function getChanges($saved)
+    {
+        return Helpers\Comparator::compare(
+            $this->data->map(function (array $settings) {
+                return Arr::dot($settings);
+            })->toArray(),
+            $saved->groupBy('domain')->map(function($item) {
+                /** @var  \Illuminate\Database\Eloquent\Collection  $item */
+                return $item->lists('casted_value', 'key');
+            })->toArray()
+        );
+    }
+
+    /**
      * Grab the settings domain name from the key.
      *
      * @param  string  $key
@@ -289,61 +309,6 @@ class SettingsManager implements Contracts\Settings
         }
 
         return $domain;
-    }
-
-    /**
-     * Prepare the changes.
-     *
-     * @param  \Illuminate\Database\Eloquent\Collection  $saved
-     *
-     * @return array
-     */
-    private function prepareChanges($saved)
-    {
-        $inserted = $updated = $deleted = [];
-        $data     = $this->data->map(function (array $settings) {
-            return Arr::dot($settings);
-        });
-
-        $db       = $saved->groupBy('domain')->map(function($item) {
-            /** @var  \Illuminate\Database\Eloquent\Collection  $item */
-            return $item->lists('casted_value', 'key');
-        });
-
-        foreach ($data as $domain => $values) {
-            foreach ($values as $key => $value) {
-                if ($db->get($domain, collect())->has($key)) {
-                    if ($db->get($domain, collect())->get($key) !== $value) {
-                        $updated[$domain][$key] = $value; // Updated
-                    }
-                }
-                else {
-                    $inserted[$domain][$key] = $value; // Inserted
-                }
-            }
-        }
-
-        // Deleted
-        if ($data->isEmpty()) {
-            $deleted = $db->map(function ($settings) {
-                /** @var \Illuminate\Database\Eloquent\Collection $settings */
-                return $settings->keys()->toArray();
-            })->toArray();
-        }
-        else {
-            foreach ($data as $domain => $values) {
-                $diff = array_diff(
-                    $db->get($domain, collect())->keys()->toArray(),
-                    array_keys($values)
-                );
-
-                if ( ! empty($diff)) {
-                    $deleted[$domain] = $diff;
-                }
-            }
-        }
-
-        return compact('inserted', 'updated', 'deleted');
     }
 
     /* ------------------------------------------------------------------------------------------------

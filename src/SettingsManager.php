@@ -41,7 +41,7 @@ class SettingsManager implements Contracts\Settings
     /**
      * The Setting model.
      *
-     * @var Setting
+     * @var \Arcanesoft\Settings\Models\Setting
      */
     private $model;
 
@@ -245,32 +245,17 @@ class SettingsManager implements Contracts\Settings
      */
     public function save()
     {
-        $saved   = $this->model->all();
-        $changes = $this->getChanges($saved);
+        $changes = $this->getChanges(
+            $saved = $this->model->all()
+        );
 
-        foreach ($changes['inserted'] as $domain => $values) {
-            foreach ($values as $key => $value) {
-                $this->model->createOne($domain, $key, $value);
-            }
+        $this->saveInserted($changes['inserted']);
+        $this->saveUpdated($saved, $changes['updated']);
+        $this->saveDeleted($saved, $changes['deleted']);
+
+        if ($this->isCached()) {
+            $this->cache->forget($this->getCacheKey());
         }
-
-        foreach ($changes['updated'] as $domain => $values) {
-            foreach ($values as $key => $value) {
-                /** @var Setting $model */
-                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
-                $model->updateValue($value);
-                $model->save();
-            }
-        }
-
-        foreach ($changes['deleted'] as $domain => $values) {
-            foreach ($values as $key) {
-                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
-                $model->delete();
-            }
-        }
-
-        $this->flushCachedSettings();
     }
 
     /**
@@ -291,6 +276,55 @@ class SettingsManager implements Contracts\Settings
                 return $item->lists('casted_value', 'key');
             })->toArray()
         );
+    }
+
+    /**
+     * Save the inserted entries.
+     *
+     * @param  array  $inserted
+     */
+    private function saveInserted(array $inserted)
+    {
+        foreach ($inserted as $domain => $values) {
+            foreach ($values as $key => $value) {
+                $this->model->createOne($domain, $key, $value);
+            }
+        }
+    }
+
+    /**
+     * Save the updated entries.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $saved
+     * @param  array                                     $updated
+     */
+    private function saveUpdated($saved, array $updated)
+    {
+        foreach ($updated as $domain => $values) {
+            foreach ($values as $key => $value) {
+                /** @var  \Arcanesoft\Settings\Models\Setting  $model */
+                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
+                $model->updateValue($value);
+                $model->save();
+            }
+        }
+    }
+
+    /**
+     * Save the deleted entries.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $saved
+     * @param  array                                     $deleted
+     */
+    private function saveDeleted($saved, array $deleted)
+    {
+        foreach ($deleted as $domain => $values) {
+            foreach ($values as $key) {
+                /** @var  \Arcanesoft\Settings\Models\Setting  $model */
+                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
+                $model->delete();
+            }
+        }
     }
 
     /**
@@ -335,7 +369,7 @@ class SettingsManager implements Contracts\Settings
     private function loadData()
     {
         foreach ($this->getCachedSettings() as $setting) {
-            /** @var Setting $setting */
+            /** @var  \Arcanesoft\Settings\Models\Setting  $setting */
             $data = $this->data->get($setting->domain, []);
 
             Arr::set($data, $setting->key, $setting->casted_value);
@@ -351,22 +385,10 @@ class SettingsManager implements Contracts\Settings
      */
     private function getCachedSettings()
     {
-        if ($this->isCached()) {
-            return $this->cache->rememberForever($this->getCacheKey(), function() {
+        return ! $this->isCached()
+            ? $this->model->all()
+            : $this->cache->rememberForever($this->getCacheKey(), function() {
                 return $this->model->all();
             });
-        }
-
-        return $this->model->all();
-    }
-
-    /**
-     * Flush the cached settings.
-     */
-    private function flushCachedSettings()
-    {
-        if ($this->isCached()) {
-            $this->cache->forget($this->getCacheKey());
-        }
     }
 }

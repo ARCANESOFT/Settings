@@ -2,6 +2,7 @@
 
 use Arcanesoft\Settings\Models\Setting;
 use Illuminate\Contracts\Cache\Repository as Cache;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
  * Class     EloquentStore
@@ -21,6 +22,18 @@ class EloquentStore
      * @var  \Arcanesoft\Settings\Models\Setting
      */
     protected $model;
+
+    /**
+     * The cache repository.
+     *
+     * @var \Illuminate\Contracts\Cache\Repository
+     */
+    protected $cache;
+
+    /**
+     * @var \Illuminate\Database\Eloquent\Collection
+     */
+    protected $saved;
 
     /* ------------------------------------------------------------------------------------------------
      |  Constructor
@@ -75,9 +88,28 @@ class EloquentStore
         return config("arcanesoft.settings.$key", $default);
     }
 
+    /**
+     * Set the saved entries.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $saved
+     *
+     * @return self
+     */
+    private function setSaved(EloquentCollection $saved)
+    {
+        $this->saved = $saved;
+
+        return $this;
+    }
+
     /* ------------------------------------------------------------------------------------------------
      |  Main Functions
      | ------------------------------------------------------------------------------------------------
+     */
+    /**
+     * Get all the setting entries.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function all()
     {
@@ -88,11 +120,18 @@ class EloquentStore
             });
     }
 
-    public function save($saved, $changes)
+    /**
+     * Save the changes.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection  $saved
+     * @param  array                                     $changes
+     */
+    public function save($saved, array $changes)
     {
+        $this->setSaved($saved);
         $this->saveInserted($changes['inserted']);
-        $this->saveUpdated($saved, $changes['updated']);
-        $this->saveDeleted($saved, $changes['deleted']);
+        $this->saveUpdated($changes['updated']);
+        $this->saveDeleted($changes['deleted']);
 
         if ($this->isCached()) {
             $this->cache->forget($this->getCacheKey());
@@ -120,15 +159,13 @@ class EloquentStore
     /**
      * Save the updated entries.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $saved
-     * @param  array                                     $updated
+     * @param  array  $updated
      */
-    private function saveUpdated($saved, array $updated)
+    private function saveUpdated(array $updated)
     {
         foreach ($updated as $domain => $values) {
             foreach ($values as $key => $value) {
-                /** @var  \Arcanesoft\Settings\Models\Setting  $model */
-                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
+                $model = $this->getSavedOne($domain, $key);
                 $model->updateValue($value);
                 $model->save();
             }
@@ -138,17 +175,27 @@ class EloquentStore
     /**
      * Save the deleted entries.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $saved
-     * @param  array                                     $deleted
+     * @param  array  $deleted
      */
-    private function saveDeleted($saved, array $deleted)
+    private function saveDeleted(array $deleted)
     {
         foreach ($deleted as $domain => $values) {
             foreach ($values as $key) {
-                /** @var  \Arcanesoft\Settings\Models\Setting  $model */
-                $model = $saved->groupBy('domain')->get($domain)->where('key', $key)->first();
-                $model->delete();
+                $this->getSavedOne($domain, $key)->delete();
             }
         }
+    }
+
+    /**
+     * Get the first saved entry.
+     *
+     * @param  string  $domain
+     * @param  string  $key
+     *
+     * @return \Arcanesoft\Settings\Models\Setting
+     */
+    private function getSavedOne($domain, $key)
+    {
+        return $this->saved->groupBy('domain')->get($domain)->where('key', $key)->first();
     }
 }

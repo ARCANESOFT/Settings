@@ -49,19 +49,6 @@ class Comparator
      | ------------------------------------------------------------------------------------------------
      */
     /**
-     * Make the Comparator instance.
-     *
-     * @param  array  $unsaved
-     * @param  array  $saved
-     *
-     * @return self
-     */
-    public static function make(array $unsaved, array $saved)
-    {
-        return new self($unsaved, $saved);
-    }
-
-    /**
      * Compare the changes.
      *
      * @param  array  $unsaved
@@ -71,7 +58,7 @@ class Comparator
      */
     public static function compare(array $unsaved, array $saved)
     {
-        return self::make($unsaved, $saved)->compareChanges();
+        return (new self($unsaved, $saved))->compareChanges();
     }
 
     /**

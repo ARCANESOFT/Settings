@@ -120,6 +120,23 @@ class SettingsManagerTest extends TestCase
     }
 
     /** @test */
+    public function it_can_update()
+    {
+        $this->settings->set('company.name', $name = 'Company name');
+        $this->saveAndMakeSettings();
+
+        $this->assertTrue($this->settings->has('company.name'));
+        $this->assertEquals($name, $this->settings->get('company.name'));
+
+        $this->settings->set('company.name', $newName = 'ARCANEDEV');
+        $this->saveAndMakeSettings();
+
+        $this->assertTrue($this->settings->has('company.name'));
+        $this->assertNotEquals($name, $this->settings->get('company.name'));
+        $this->assertEquals($newName, $this->settings->get('company.name'));
+    }
+
+    /** @test */
     public function it_can_delete()
     {
         $this->settings->set('foo', 'bar');

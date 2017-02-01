@@ -1,5 +1,6 @@
 <?php namespace Arcanesoft\Settings\Facades;
 
+use Arcanesoft\Settings\Contracts\Settings as SettingsContract;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -10,5 +11,5 @@ use Illuminate\Support\Facades\Facade;
  */
 class Settings extends Facade
 {
-    protected static function getFacadeAccessor() { return 'arcanesoft.settings.manager'; }
+    protected static function getFacadeAccessor() { return SettingsContract::class; }
 }

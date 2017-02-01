@@ -91,7 +91,6 @@ class SettingsServiceProvider extends PackageServiceProvider
     public function provides()
     {
         return [
-            'arcanesoft.settings.manager',
             Contracts\Settings::class,
         ];
     }

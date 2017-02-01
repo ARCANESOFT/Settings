@@ -58,7 +58,6 @@ class SettingsServiceProviderTest extends TestCase
     public function it_can_provides()
     {
         $expected = [
-            'arcanesoft.settings.manager',
             \Arcanesoft\Settings\Contracts\Settings::class,
         ];
 

@@ -1,6 +1,7 @@
 <?php namespace Arcanesoft\Settings;
 
 use Arcanedev\Support\PackageServiceProvider;
+use Illuminate\Support\Str;
 
 /**
  * Class     SettingsServiceProvider
@@ -49,7 +50,7 @@ class SettingsServiceProvider extends PackageServiceProvider
      */
     protected function getConfigKey()
     {
-        return str_slug($this->vendor . ' ' . $this->package, '.');
+        return Str::slug($this->vendor.' '.$this->package, '.');
     }
 
     /* ------------------------------------------------------------------------------------------------
@@ -76,7 +77,12 @@ class SettingsServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
-        $this->registerPublishes();
+        // Config
+        $this->publishes([
+            $this->getConfigFile() => config_path("{$this->vendor}/{$this->package}.php"),
+        ], 'config');
+
+        $this->publishMigrations();
     }
 
     /**
@@ -86,7 +92,7 @@ class SettingsServiceProvider extends PackageServiceProvider
     {
         return [
             'arcanesoft.settings.manager',
-            \Arcanesoft\Settings\Contracts\Settings::class,
+            Contracts\Settings::class,
         ];
     }
 
@@ -99,30 +105,6 @@ class SettingsServiceProvider extends PackageServiceProvider
      */
     private function registerSettingsManager()
     {
-        $this->singleton(
-            'arcanesoft.settings.manager',
-            \Arcanesoft\Settings\SettingsManager::class
-        );
-
-        $this->bind(
-            \Arcanesoft\Settings\Contracts\Settings::class,
-            'arcanesoft.settings.manager'
-        );
-    }
-
-    /**
-     * Register publishes.
-     */
-    private function registerPublishes()
-    {
-        // Config
-        $this->publishes([
-            $this->getConfigFile() => config_path("{$this->vendor}/{$this->package}.php"),
-        ], 'config');
-
-        // Migrations
-        $this->publishes([
-            $this->getBasePath() . '/database/migrations/' => database_path('migrations')
-        ], 'migrations');
+        $this->singleton(Contracts\Settings::class, SettingsManager::class);
     }
 }

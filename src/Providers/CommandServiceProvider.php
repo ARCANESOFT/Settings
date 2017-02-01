@@ -11,45 +11,15 @@ use Arcanedev\Support\Providers\CommandServiceProvider as ServiceProvider;
 class CommandServiceProvider extends ServiceProvider
 {
     /* ------------------------------------------------------------------------------------------------
-     |  Main Functions
+     |  Properties
      | ------------------------------------------------------------------------------------------------
      */
     /**
-     * Register the service provider.
-     */
-    public function register()
-    {
-        $this->registerPublishCommand();
-
-        $this->commands($this->commands);
-    }
-
-    /**
-     * Get the provided commands.
+     * The commands to be registered.
      *
-     * @return array
+     * @var array
      */
-    public function provides()
-    {
-        return [
-            'arcanesoft.settings.commands.publish',
-        ];
-    }
-
-    /* ------------------------------------------------------------------------------------------------
-     |  Command Functions
-     | ------------------------------------------------------------------------------------------------
-     */
-    /**
-     * Register the publish command.
-     */
-    private function registerPublishCommand()
-    {
-        $this->app->singleton(
-            'arcanesoft.settings.commands.publish',
-            \Arcanesoft\Settings\Console\PublishCommand::class
-        );
-
-        $this->commands[] = \Arcanesoft\Settings\Console\PublishCommand::class;
-    }
+    protected $commands = [
+        \Arcanesoft\Settings\Console\PublishCommand::class,
+    ];
 }

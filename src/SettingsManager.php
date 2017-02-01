@@ -236,7 +236,7 @@ class SettingsManager implements Contracts\Settings
             })->toArray(),
             $saved->groupBy('domain')->map(function($item) {
                 /** @var  \Illuminate\Database\Eloquent\Collection  $item */
-                return $item->lists('casted_value', 'key');
+                return $item->pluck('casted_value', 'key');
             })->toArray()
         );
     }

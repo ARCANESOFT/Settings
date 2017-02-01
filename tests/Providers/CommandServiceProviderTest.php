@@ -59,7 +59,7 @@ class CommandServiceProviderTest extends TestCase
     public function it_can_provides()
     {
         $expected = [
-            'arcanesoft.settings.commands.publish',
+            \Arcanesoft\Settings\Console\PublishCommand::class,
         ];
 
         $this->assertEquals($expected, $this->provider->provides());
